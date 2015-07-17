@@ -11,8 +11,16 @@ class StrawHats(Player):
 
     def newGame(self):
         self.shots = set()
+        self.shotTargets = list()
+        for i in range(0,10):
+          for c in range(0,10):
+            if (c % 2) == 0 and (i % 2) == 0:
+              shot = (i, c)
+            elif (c % 2) == 1 and (i %2) == 1:
+              shot = (i, c)
+            self.shotTargets.append(shot)
         self.targetSet = set()
-        self.shipBumper = set()
+        self.shipBumper = list()
 
     def placeShip():
         pass
@@ -21,48 +29,56 @@ class StrawHats(Player):
           isValid = False
           while not isValid:
             orientation = random.choice([UP, RIGHT])
+            location = (random.randint(0, BOARD_WIDTH - 1),
+            random.randint(0, BOARD_HEIGHT - 1 - ship.size))
             if orientation == UP:
-              location = (random.randint(0, BOARD_WIDTH - 1),
-              random.randint(0, BOARD_HEIGHT - 1 - ship.size))
-              for space in range(1,ship.size):
-                spacePlus = space+1
-                spaceMinus = space-1
-                space1 = (location[0]+spacePlus, location[1])
-                self.shipBumper.add(space1)
-                space2 = (location[0], location[1]+spacePlus)
-                self.shipBumper.add(space2)
-                space3 = (location[0]-spaceMinus, location[1])
-                self.shipBumper.add(space3)
-                space4 = (location[0], location[1]-spaceMinus)
-                self.shipBumper.add(space4)
+              ship.placeShip(location, orientation)
+              if self.isShipPlacedLegally(ship) and ship not in (self.shipBumper):
+                for x in range(0, ship.size-1):
+                  shipCheck = (location[0]+x, location[1])
+                  if shipCheck not in self.shipBumper:
+                    isValid = True
+                    for space in range(0,ship.size-1):
+                      space1 = (location[0]+1, location[1]+space)
+                      self.shipBumper.append(space1)
+                      space2 = (location[0], location[1]+space+1)
+                      self.shipBumper.append(space2)
+                      space3 = (location[0]-1, location[1]+space)
+                      self.shipBumper.append(space3)
+                      space4 = (location[0], location[1]+space-1)
+                      self.shipBumper.append(space4)
             else:
-              location = (random.randint(0, BOARD_WIDTH - 1 - ship.size),
-              random.randint(0, BOARD_HEIGHT - 1))
-            ship.placeShip(location, orientation)
-
-            if self.isShipPlacedLegally(ship) and not self.shipBumper:
-              isValid = True
-            else:
-              self.shipBumper = set()
+              ship.placeShip(location, orientation)
+              if self.isShipPlacedLegally(ship) and ship not in (self.shipBumper):
+                for x in range(0, ship.size-1):
+                  shipCheck = (location[0]+x, location[1])
+                  if shipCheck not in self.shipBumper:
+                    isValid = True
+                    for space in range(0,ship.size-1):
+                      space1 = (location[0]+space+1, location[1])
+                      self.shipBumper.append(space1)
+                      space2 = (location[0]+space, location[1]+1)
+                      self.shipBumper.append(space2)
+                      space3 = (location[0]+space-1, location[1])
+                      self.shipBumper.append(space3)
+                      space4 = (location[0]+space, location[1]-1)
 
     def fireShot(self):
         if not self.targetSet:
-          shot = (random.randint(0, BOARD_WIDTH - 1),
-                 random.randint(0, BOARD_HEIGHT - 1))
-
+          shot = random.choice(self.shotTargets)
           while shot in self.shots:
-            shot = (random.randint(0, BOARD_WIDTH - 1),
-                    random.randint(0, BOARD_HEIGHT - 1))
+            shot = random.choice(self.shotTargets)
         else:
           shot = self.targetSet.pop()
           while shot in self.shots:
             if not self.targetSet:
               while shot in self.shots:
-                shot = (random.randint(0, BOARD_WIDTH - 1),
-                random.randint(0, BOARD_HEIGHT - 1))
+                shot = random.choice(self.shotTargets)
             else:
               shot = self.targetSet.pop()
         self.shots.add(shot)
+        if shot in self.shotTargets:
+          self.shotTargets.remove(shot)
         return shot 
 
     def addTargets(self, shot):
